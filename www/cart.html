@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cart - My E-commerce Store</title>
+  <meta name="description" content="Your shopping cart items.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- SEO Meta Tags -->
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="http://yourdomain.com/cart.html">
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Your Cart - My E-commerce Store">
+  <meta property="og:description" content="Review the items in your shopping cart.">
+  <meta property="og:url" content="http://yourdomain.com/cart.html">
+  <meta property="og:type" content="website">
+
+  <!-- Tailwind CSS -->
+  <link href="./dist/output.css" rel="stylesheet">
+  <!-- Decimal.js for high-precision calculations -->
+  <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.0/decimal.min.js"></script>
+</head>
+<body class="bg-base-100">
+
+  <!-- Navbar -->
+  <div class="navbar bg-base-200">
+    <div class="flex-1">
+      <a class="btn btn-ghost normal-case text-xl" href="index.html">My Store</a>
+    </div>
+    <div class="flex-none">
+      <a href="cart.html" class="btn btn-ghost">
+        Cart
+        <div class="badge badge-secondary ml-1" id="cart-count">0</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="container mx-auto p-4">
+    <h1 class="text-4xl font-bold mb-6 text-center">Your Cart</h1>
+    <div id="cart-items" class="flex flex-col gap-6"></div>
+    <div id="cart-summary" class="mt-6 text-right"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer p-4 bg-base-200 text-base-content footer-center">
+    <div>
+      <p>&copy; 2024 My E-commerce Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="scripts/cart.js"></script>
+
+<script>
+  // Display cart items
+  async function displayCartItems() {
+    const cartItemsContainer = document.getElementById('cart-items');
+    cartItemsContainer.innerHTML = '';
+
+    if (cart.length === 0) {
+      cartItemsContainer.innerHTML = '<p class="text-center">Your cart is empty.</p>';
+      document.getElementById('cart-summary').innerHTML = '';
+      return;
+    }
+
+    // Fetch all products once to avoid multiple API calls
+    const response = await fetch('http://mytestsite.local:8000/products');
+    const allProducts = await response.json();
+
+    // Create a map for quick product lookup
+    const productMap = {};
+    allProducts.forEach(product => {
+      productMap[product.id] = product;
+    });
+
+    // Count the quantity of each product in the cart
+    const cartProductCounts = {};
+    cart.forEach(productId => {
+      cartProductCounts[productId] = (cartProductCounts[productId] || 0) + 1;
+    });
+
+    // Store totals by currency
+    const totalsByCurrency = {};
+
+    for (const productId in cartProductCounts) {
+      const product = productMap[productId];
+      const quantity = cartProductCounts[productId];
+      const currency = product.currency || 'USD'; // Default to 'USD' if currency is not defined
+      const totalProductPrice = new Decimal(product.price).times(quantity);
+
+      // Initialize currency group if not already present
+      if (!totalsByCurrency[currency]) {
+        totalsByCurrency[currency] = new Decimal(0);
+      }
+
+      // Add to currency total
+      totalsByCurrency[currency] = totalsByCurrency[currency].plus(totalProductPrice);
+
+      // Create and display cart item card
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'card card-side bg-base-100 shadow-md flex items-center';
+
+      itemDiv.innerHTML = `
+        <figure>
+          <img src="${product.image}" alt="${product.name}" class="w-32 h-32 object-cover">
+        </figure>
+        <div class="card-body flex-1">
+          <h2 class="card-title">${product.name}</h2>
+          <p>${product.description}</p>
+          <div class="flex items-center justify-between mt-4">
+            <div>
+              <label class="label">
+                <span class="label-text">Quantity:</span>
+              </label>
+              <div class="input-group">
+                <button class="btn btn-outline btn-sm" onclick="decreaseQuantity(${product.id})">-</button>
+                <input type="text" value="${quantity}" class="input input-bordered input-sm w-16 text-center" readonly>
+                <button class="btn btn-outline btn-sm" onclick="increaseQuantity(${product.id})">+</button>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-bold">${currency} ${totalProductPrice.toFixed()}</p>
+              <button class="btn btn-error btn-sm mt-2" onclick="removeFromCart(${product.id}); displayCartItems();">Remove</button>
+            </div>
+          </div>
+        </div>
+      `;
+      cartItemsContainer.appendChild(itemDiv);
+    }
+
+    // Display currency totals in summary
+    const summaryHTML = Object.keys(totalsByCurrency)
+      .map(currency => `<h2 class="text-2xl font-bold">Total (${currency}): ${currency} ${totalsByCurrency[currency].toFixed()}</h2>`)
+      .join('');
+
+    document.getElementById('cart-summary').innerHTML = `
+      ${summaryHTML}
+      <a href="checkout.html" class="btn btn-primary mt-4">Proceed to Checkout</a>
+    `;
+  }
+
+  // Increase quantity
+  function increaseQuantity(productId) {
+    cart.push(productId);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartCount();
+    displayCartItems();
+  }
+
+  // Decrease quantity
+  function decreaseQuantity(productId) {
+    const index = cart.indexOf(productId);
+    if (index !== -1) {
+      cart.splice(index, 1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartCount();
+      displayCartItems();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateCartCount();
+    displayCartItems();
+  });
+</script>
+
+</body>
+</html>
