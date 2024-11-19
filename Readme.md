@@ -12,14 +12,14 @@ Agress is an open-source e-commerce platform that strips out the bloat, avoids p
 
 - **Simplicity-First Design**: A single template structure without excess.
 - **API-Driven Architecture**: REST API for easy frontend integration and custom workflows.
-- **Multi-Platform Ready**: Supports static HTML, ActivityPub, Gopher, and more.
-- **Direct Payment Gateway Integration**: Plugin-based setup for Stripe, Square, Auth.net, and more.
-- **Customizable Cart & Checkout**: Flexible currency, cart totals, and billing configurations.
-- **No App Store Dependence**: Everything you need, right out of the box—no reliance on third-party app ecosystems.
+- **Chat Based Checkout**: Checkout happens in chat. Enabling negotiation of custom payment shcemes on the fly. As well as being cryptographicly secure. 
+
 
 ---
 
 ## Installation
+
+0. Set up Signal-cli as a socket daemon. Follow their official documentation to do this, keep the socket path information for later. If you are using this within a user-space context, mount the socket in a custom user path. 
 
 1. **Clone the repository**:
    ```bash
@@ -137,15 +137,7 @@ Run unit tests with:
 ```bash
 php artisan test
 ```
-
----
-
-## Roadmap
-
-- **Multi-Language Support**: Enable multi-language options for global shops.
-- **Enhanced Analytics**: Integrate lightweight analytics for insights.
-- **Discount Codes**: Built-in support for promotions and coupons.
-
+(not ready yet)
 ---
 
 ## License
