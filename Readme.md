@@ -4,7 +4,7 @@
 
 _Based Commerce_
 
-Agress is an open-source e-commerce platform that strips out the bloat, avoids plugin overload, and emphasizes performance with a single-template setup. Built with **PHP**, **Lumen**, and a **Tailwind/DaisyUI** frontend, Agress delivers a streamlined experience on the front end and powerful, customizable workflows on the back end.
+Agress is an open-source e-commerce platform that strips out the bloat, avoids plugin overload, and emphasizes performance with a single-template setup. Built with **PHP**, **Signal-CLI**, and a **Tailwind/DaisyUI** frontend, Agress delivers a streamlined experience on the front end and powerful, customizable workflows on the back end.
 
 ---
 
