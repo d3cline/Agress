@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
-
 use App\Models\Product;
 
 class ProductController extends Controller
@@ -35,140 +33,154 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
             'description' => 'nullable|string',
-            'image' => 'nullable|mimes:webp,jpg,png|max:2048'
+            'image' => 'nullable|string', // Allows base64 or file input
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-    
-        $productData = $request->all();
-    
-        if ($request->hasFile('image') && $request->file('image')->isValid()) {
-            $image = $request->file('image');
-            $imagePath = $image->getRealPath();
-    
-            // Load the image based on its MIME type, including WebP support
-            switch ($image->getMimeType()) {
-                case 'image/jpeg':
-                    $gdImage = imagecreatefromjpeg($imagePath);
-                    break;
-                case 'image/png':
-                    $gdImage = imagecreatefrompng($imagePath);
-                    break;
-                case 'image/webp':
-                    $gdImage = imagecreatefromwebp($imagePath);
-                    break;
-                default:
+
+        $productData = $request->only(['name', 'price', 'description']);
+        
+        if ($request->has('image')) {
+            $imageInput = $request->input('image');
+
+            // Check if the image is embedded (base64) or a file
+            if (preg_match('/^data:image\/(\w+);base64,/', $imageInput, $matches)) {
+                $imageType = strtolower($matches[1]);
+                if (!in_array($imageType, ['jpeg', 'png', 'webp'])) {
                     return response()->json(['errors' => ['image' => 'Unsupported image format']], 422);
+                }
+
+                // Decode the base64 image
+                $imageData = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $imageInput));
+                if ($imageData === false) {
+                    return response()->json(['errors' => ['image' => 'Invalid base64 data']], 422);
+                }
+
+                // Convert and encode as WebP
+                $gdImage = imagecreatefromstring($imageData);
+                if (!$gdImage) {
+                    return response()->json(['errors' => ['image' => 'Invalid image data']], 422);
+                }
+
+                ob_start();
+                imagewebp($gdImage, null, 80); // Adjust quality as needed
+                $webpData = ob_get_clean();
+                imagedestroy($gdImage);
+
+                $productData['image'] = 'data:image/webp;base64,' . base64_encode($webpData);
+            } elseif ($request->hasFile('image') && $request->file('image')->isValid()) {
+                $image = $request->file('image');
+                $imagePath = $image->getRealPath();
+
+                switch ($image->getMimeType()) {
+                    case 'image/jpeg':
+                        $gdImage = imagecreatefromjpeg($imagePath);
+                        break;
+                    case 'image/png':
+                        $gdImage = imagecreatefrompng($imagePath);
+                        break;
+                    case 'image/webp':
+                        $gdImage = imagecreatefromwebp($imagePath);
+                        break;
+                    default:
+                        return response()->json(['errors' => ['image' => 'Unsupported image format']], 422);
+                }
+
+                ob_start();
+                imagewebp($gdImage, null, 80);
+                $webpData = ob_get_clean();
+                imagedestroy($gdImage);
+
+                $productData['image'] = 'data:image/webp;base64,' . base64_encode($webpData);
+            } else {
+                return response()->json(['errors' => ['image' => 'Invalid image input']], 422);
             }
-    
-            // Convert and save the image as WebP format in a temporary buffer
-            ob_start();
-            imagewebp($gdImage, null, 80); // Adjust the quality as needed
-            $webpData = ob_get_clean();
-    
-            // Free up memory
-            imagedestroy($gdImage);
-    
-            // Convert WebP data to base64 with the required prefix
-            $imageData = 'data:image/webp;base64,' . base64_encode($webpData);
-            $productData['image'] = $imageData;
         }
-    
+
         $product = Product::create($productData);
         return response()->json($product, 201);
     }
-    
 
     // Update an existing product
     public function update(Request $request, $id)
     {
-        echo 'Function started<br>';
-
         $product = Product::find($id);
         if (!$product) {
-            echo 'Product not found<br>';
             return response()->json(['error' => 'Product not found'], 404);
         }
-        echo 'Product found<br>';
 
-        // Validate the incoming request data
         $validator = Validator::make($request->all(), [
-            'name'        => 'sometimes|required|string|max:255',
-            'price'       => 'sometimes|required|numeric',
-            'currency'    => 'sometimes|required|string|max:10',
+            'name' => 'sometimes|required|string|max:255',
+            'price' => 'sometimes|required|numeric',
             'description' => 'nullable|string',
-            'image'       => 'nullable|mimes:webp,jpg,png|max:2048',
+            'image' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
-            echo 'Validation failed<br>';
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        echo 'Validation passed<br>';
 
-        $productData = $request->only(['name', 'price', 'currency', 'description']);
-        echo 'Product data before adding image: <pre>';
-        print_r($productData);
-        echo '</pre>';
+        $productData = $request->only(['name', 'price', 'description']);
 
-        // Process the image if it's uploaded
-        if ($request->hasFile('image') && $request->file('image')->isValid()) {
-            echo 'Image file detected and is valid<br>';
-            $image     = $request->file('image');
-            $imagePath = $image->getRealPath();
+        if ($request->has('image')) {
+            $imageInput = $request->input('image');
 
-            echo 'Image path: ' . $imagePath . '<br>';
-
-            // Load the image based on its MIME type
-            switch ($image->getMimeType()) {
-                case 'image/jpeg':
-                    echo 'Image is JPEG<br>';
-                    $gdImage = imagecreatefromjpeg($imagePath);
-                    break;
-                case 'image/png':
-                    echo 'Image is PNG<br>';
-                    $gdImage = imagecreatefrompng($imagePath);
-                    break;
-                case 'image/webp':
-                    echo 'Image is WEBP<br>';
-                    $gdImage = imagecreatefromwebp($imagePath);
-                    break;
-                default:
-                    echo 'Unsupported image format<br>';
+            if (preg_match('/^data:image\/(\w+);base64,/', $imageInput, $matches)) {
+                $imageType = strtolower($matches[1]);
+                if (!in_array($imageType, ['jpeg', 'png', 'webp'])) {
                     return response()->json(['errors' => ['image' => 'Unsupported image format']], 422);
+                }
+
+                $imageData = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $imageInput));
+                if ($imageData === false) {
+                    return response()->json(['errors' => ['image' => 'Invalid base64 data']], 422);
+                }
+
+                $gdImage = imagecreatefromstring($imageData);
+                if (!$gdImage) {
+                    return response()->json(['errors' => ['image' => 'Invalid image data']], 422);
+                }
+
+                ob_start();
+                imagewebp($gdImage, null, 80);
+                $webpData = ob_get_clean();
+                imagedestroy($gdImage);
+
+                $productData['image'] = 'data:image/webp;base64,' . base64_encode($webpData);
+            } elseif ($request->hasFile('image') && $request->file('image')->isValid()) {
+                $image = $request->file('image');
+                $imagePath = $image->getRealPath();
+
+                switch ($image->getMimeType()) {
+                    case 'image/jpeg':
+                        $gdImage = imagecreatefromjpeg($imagePath);
+                        break;
+                    case 'image/png':
+                        $gdImage = imagecreatefrompng($imagePath);
+                        break;
+                    case 'image/webp':
+                        $gdImage = imagecreatefromwebp($imagePath);
+                        break;
+                    default:
+                        return response()->json(['errors' => ['image' => 'Unsupported image format']], 422);
+                }
+
+                ob_start();
+                imagewebp($gdImage, null, 80);
+                $webpData = ob_get_clean();
+                imagedestroy($gdImage);
+
+                $productData['image'] = 'data:image/webp;base64,' . base64_encode($webpData);
+            } else {
+                return response()->json(['errors' => ['image' => 'Invalid image input']], 422);
             }
-
-            // Convert and save the image as WebP format
-            ob_start();
-            imagewebp($gdImage, null, 80); // Adjust quality as needed
-            $webpData = ob_get_clean();
-
-            // Free up memory
-            imagedestroy($gdImage);
-
-            // Convert WebP data to base64
-            $imageData            = 'data:image/webp;base64,' . base64_encode($webpData);
-            $productData['image'] = $imageData;
         }
 
-        // Final check before updating
-        echo 'Product data to be updated: <pre>';
-        print_r($productData);
-        echo '</pre>';
-
-        // Update the product with the new data
-        if ($product->update($productData)) {
-            echo 'Product updated successfully<br>';
-        } else {
-            echo 'Product update failed<br>';
-        }
-
+        $product->update($productData);
         return response()->json($product->fresh());
     }
-
-
 
     // Delete a product
     public function destroy($id)
