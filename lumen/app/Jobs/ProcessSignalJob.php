@@ -41,7 +41,7 @@ class ProcessSignalJob implements ShouldQueue
     {
         try {
             Log::info('Processing Signal job for order ID: ' . $this->order->id);
-
+    
             if ($this->isSignalRegistered($this->order->phoneNumber)) {
                 $this->startSignalGroupChat($this->order->phoneNumber);
                 $this->order->status = 'Completed';
@@ -49,15 +49,19 @@ class ProcessSignalJob implements ShouldQueue
                 $this->sendFallbackEmail();
                 $this->order->status = 'Email Sent';
             }
-
+    
             $this->order->save();
-
+    
+            // Delete the order after processing
+            $this->order->delete();
+    
         } catch (\Exception $e) {
             Log::error('Signal processing failed for order ID: ' . $this->order->id, ['error' => $e->getMessage()]);
             $this->order->status = 'Failed';
             $this->order->save();
         }
     }
+
 
     protected function isSignalRegistered($phoneNumber)
     {
