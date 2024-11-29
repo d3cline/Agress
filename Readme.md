@@ -157,5 +157,9 @@ Live examples,
 [SwabCity.shop](https://swabcity.shop)
 
 ## Donate XMR
-![image](https://github.com/user-attachments/assets/f5eafb54-da11-402d-b0e3-7a690ed59839)
+
+![Donate Monero](https://github.com/user-attachments/assets/f5eafb54-da11-402d-b0e3-7a690ed59839)
+
+**Wallet Address:**
+`88Up8HAFvsmZ5Avpf8n9H3ERcjTVvRHSr2nAschx2HYXJFcHXv9h2JWKuuCkBRgUPJZEZj9wjTsvyTS1vBBSuhBnCkqGdo8`
 
