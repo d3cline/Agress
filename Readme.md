@@ -155,3 +155,7 @@ Let’s build something incredible with **Agress** and redefine e-commerce, toge
 
 Live examples, 
 [SwabCity.shop](https://swabcity.shop)
+
+## Donate XMR
+![image](https://github.com/user-attachments/assets/f5eafb54-da11-402d-b0e3-7a690ed59839)
+
