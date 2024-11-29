@@ -7,8 +7,8 @@ _Based Commerce_
 Agress is an open-source e-commerce platform that strips out the bloat, avoids plugin overload, and emphasizes performance with a single-template setup. Built with **PHP**, **Signal-CLI**, and a **Tailwind/DaisyUI** frontend, Agress delivers a streamlined experience on the front end and powerful, customizable workflows on the back end.
 
 # AgressAdmin
-[iOS](https://github.com/d3cline/Agress-Admin-iOS)
-[Android](https://github.com/d3cline/Agress-Admin-Android)
+- [iOS](https://github.com/d3cline/Agress-Admin-iOS)
+- [Android](https://github.com/d3cline/Agress-Admin-Android)
 
 ---
 
