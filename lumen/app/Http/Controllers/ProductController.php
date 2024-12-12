@@ -40,7 +40,7 @@ class ProductController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $productData = $request->only(['name', 'price', 'description']);
+        $productData = $request->only(['name', 'price', 'description', 'currency']);
         
         if ($request->has('image')) {
             $imageInput = $request->input('image');
@@ -122,7 +122,7 @@ class ProductController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $productData = $request->only(['name', 'price', 'description']);
+        $productData = $request->only(['name', 'price', 'description', 'currency']);
 
         if ($request->has('image')) {
             $imageInput = $request->input('image');
